@@ -1,11 +1,14 @@
+
 "use client";
 
 import { useMemo, useState } from "react";
-
+import Link from "next/link";
 import {
-  ChevronDown,
+  AlertCircle,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Layers3,
   Pencil,
   Plus,
   Search,
@@ -26,862 +29,326 @@ type SKUData = {
 };
 
 const initialData: SKUData[] = [
-  {
-    id: 1,
-    sku: "SKU - 001",
-    nama: "Laptop",
-    kategori: "Elektronik",
-    stok: 5,
-    lokasi: "A1",
-  },
-  {
-    id: 2,
-    sku: "SKU - 002",
-    nama: "Mouse",
-    kategori: "Elektronik",
-    stok: 2,
-    lokasi: "A2",
-  },
+  { id: 1, sku: "SKU-001", nama: "Laptop", kategori: "Elektronik", stok: 5, lokasi: "A1" },
+  { id: 2, sku: "SKU-002", nama: "Mouse", kategori: "Aksesoris", stok: 12, lokasi: "A2" },
+  { id: 3, sku: "SKU-003", nama: "Keyboard", kategori: "Aksesoris", stok: 0, lokasi: "B1" },
+  { id: 4, sku: "SKU-004", nama: "Monitor", kategori: "Elektronik", stok: 20, lokasi: "B2" },
+  { id: 5, sku: "SKU-005", nama: "Kursi Kantor", kategori: "Furniture", stok: 7, lokasi: "A1" },
 ];
 
 export default function SkuDatabasePage() {
-  // =====================================================
-  // DATA
-  // =====================================================
-
-  const [data, setData] =
-    useState<SKUData[]>(initialData);
-
-  // =====================================================
-  // SEARCH
-  // =====================================================
-
+  const [data, setData] = useState<SKUData[]>(initialData);
   const [search, setSearch] = useState("");
+  const [kategori, setKategori] = useState("Semua Kategori");
+  const [lokasi, setLokasi] = useState("Semua Lokasi");
+  const [status, setStatus] = useState("Semua Status");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editData, setEditData] = useState<SKUData | null>(null);
 
-  // =====================================================
-  // FILTER
-  // =====================================================
-
-  const [showFilter, setShowFilter] =
-    useState(false);
-
-  const [filterKategori, setFilterKategori] =
-    useState("Semua Kategori");
-
-  const [filterLokasi, setFilterLokasi] =
-    useState("Semua Lokasi");
-
-  const [filterStok, setFilterStok] =
-    useState("Semua Stok");
-
-  // =====================================================
-  // MODAL
-  // =====================================================
-
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [editData, setEditData] =
-    useState<SKUData | null>(null);
-
-  // =====================================================
-  // PAGINATION
-  // =====================================================
-
-  const [currentPage, setCurrentPage] =
-    useState(1);
-
-  const totalPages = 10;
-
-  // =====================================================
-  // STATUS STOK
-  // =====================================================
+  const itemsPerPage = 5;
 
   const getStatus = (stok: number) => {
-    if (stok <= 0) {
-      return {
-        text: "Habis",
-        color: "bg-red-400",
-      };
-    }
-
-    if (stok <= 2) {
-      return {
-        text: "Menipis",
-        color: "bg-yellow-300",
-      };
-    }
-
-    return {
-      text: "Tersedia",
-      color: "bg-green-500",
-    };
+    if (stok === 0) return "Habis";
+    if (stok <= 5) return "Menipis";
+    return "Tersedia";
   };
-
-  // =====================================================
-  // FILTER DATA
-  // =====================================================
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const keyword =
-        search.toLowerCase();
+      const keyword = search.toLowerCase();
 
       const cocokSearch =
-        item.sku
-          .toLowerCase()
-          .includes(keyword) ||
-        item.nama
-          .toLowerCase()
-          .includes(keyword) ||
-        item.kategori
-          .toLowerCase()
-          .includes(keyword);
+        item.sku.toLowerCase().includes(keyword) ||
+        item.nama.toLowerCase().includes(keyword) ||
+        item.kategori.toLowerCase().includes(keyword);
 
       const cocokKategori =
-        filterKategori ===
-          "Semua Kategori" ||
-        item.kategori === filterKategori;
+        kategori === "Semua Kategori" || item.kategori === kategori;
 
       const cocokLokasi =
-        filterLokasi ===
-          "Semua Lokasi" ||
-        item.lokasi === filterLokasi;
+        lokasi === "Semua Lokasi" || item.lokasi === lokasi;
 
-      const cocokStok =
-        filterStok === "Semua Stok" ||
-        (filterStok === "Stok Aman" &&
-          item.stok > 2) ||
-        (filterStok === "Stok Menipis" &&
-          item.stok > 0 &&
-          item.stok <= 2) ||
-        (filterStok === "Stok Habis" &&
-          item.stok <= 0);
+      const cocokStatus =
+        status === "Semua Status" || getStatus(item.stok) === status;
 
-      return (
-        cocokSearch &&
-        cocokKategori &&
-        cocokLokasi &&
-        cocokStok
-      );
+      return cocokSearch && cocokKategori && cocokLokasi && cocokStatus;
     });
-  }, [
-    data,
-    search,
-    filterKategori,
-    filterLokasi,
-    filterStok,
-  ]);
+  }, [data, search, kategori, lokasi, status]);
 
-  // =====================================================
-  // DATA HALAMAN
-  // =====================================================
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  const paginatedData =
-    currentPage === 1
-      ? filteredData
-      : [];
+  const totalSKU = data.length;
+  const skuAktif = data.filter((item) => item.stok > 0).length;
+  const stokHabis = data.filter((item) => item.stok === 0).length;
+  const totalKategori = new Set(data.map((item) => item.kategori)).size;
 
-  // =====================================================
-  // TAMBAH SKU
-  // =====================================================
+  const kategoriList = [...new Set(data.map((item) => item.kategori))];
+  const lokasiList = [...new Set(data.map((item) => item.lokasi))];
 
-  const handleAdd = (
-    newItem: Omit<SKUData, "id">
-  ) => {
-    const newData: SKUData = {
-      id: Date.now(),
-      ...newItem,
-    };
-
-    setData((prev) => [
-      ...prev,
-      newData,
-    ]);
-
-    setShowModal(false);
-    setCurrentPage(1);
-  };
-
-  // =====================================================
-  // EDIT SKU
-  // =====================================================
-
-  const handleEdit = (
-    updatedItem: SKUData
-  ) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === updatedItem.id
-          ? updatedItem
-          : item
-      )
+  const handleSave = (updatedItem: SKUData) => {
+    setData((previous) =>
+      previous.map((item) => item.id === updatedItem.id ? updatedItem : item)
     );
-
     setEditData(null);
   };
 
-  // =====================================================
-  // HAPUS SKU
-  // =====================================================
-
   const handleDelete = (id: number) => {
-    const yakin = window.confirm(
-      "Apakah kamu yakin ingin menghapus SKU ini?"
-    );
+    if (!window.confirm("Apakah kamu yakin ingin menghapus SKU ini?")) return;
 
-    if (!yakin) return;
-
-    setData((prev) =>
-      prev.filter(
-        (item) => item.id !== id
-      )
-    );
+    setData((previous) => previous.filter((item) => item.id !== id));
+    setCurrentPage(1);
   };
-
-  // =====================================================
-  // RESET FILTER
-  // =====================================================
 
   const resetFilter = () => {
-    setFilterKategori("Semua Kategori");
-    setFilterLokasi("Semua Lokasi");
-    setFilterStok("Semua Stok");
-
+    setSearch("");
+    setKategori("Semua Kategori");
+    setLokasi("Semua Lokasi");
+    setStatus("Semua Status");
     setCurrentPage(1);
-    setShowFilter(false);
   };
-
-  // =====================================================
-  // PAGINATION
-  // =====================================================
-
-  const changePage = (page: number) => {
-    if (
-      page < 1 ||
-      page > totalPages
-    ) {
-      return;
-    }
-
-    setCurrentPage(page);
-  };
-
-  // =====================================================
-  // JUMLAH BARIS KOSONG
-  // =====================================================
-
-  const jumlahBarisKosong = Math.max(
-    0,
-    8 - paginatedData.length
-  );
-
-  // =====================================================
-  // RENDER
-  // =====================================================
 
   return (
-    <div className="flex min-h-screen bg-white">
-
-      {/* =================================================
-          SIDEBAR
-      ================================================= */}
-
+    <div className="sku-page">
       <Sidebar />
 
-      {/* =================================================
-          MAIN
-      ================================================= */}
-
-      <main className="flex min-h-screen flex-1 flex-col px-6 py-5">
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <div className="flex shrink-0 items-start justify-between">
-
+      <main className="sku-main">
+        <header className="sku-topbar">
           <div>
+            <p>Dashboard / SKU Database</p>
+            <h1>SKU Database</h1>
+          </div>
+          <ProfilManager />
+        </header>
 
-            <h1 className="text-2xl font-bold text-[#1A1A1A]">
-              SKU Database
-            </h1>
+        <section className="sku-content">
+          <div className="sku-page-heading">
+            <div>
+              <h2>Database SKU</h2>
+              <p>Kelola data barang yang digunakan.</p>
+            </div>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Kelola data barang di gudang
-            </p>
-
+            <Link href="/sku-database/tambah" className="sku-add-button">
+              <Plus size={16} />
+              Tambah SKU
+            </Link>
           </div>
 
-          <div className="flex items-center">
-            <ProfilManager />
+          <div className="sku-summary-grid">
+            <div className="sku-summary-card">
+              <div>
+                <p>Total SKU</p>
+                <h3>{totalSKU}</h3>
+                <span>Seluruh produk</span>
+              </div>
+              <div className="sku-summary-icon"><Layers3 size={21} /></div>
+            </div>
+
+            <div className="sku-summary-card">
+              <div>
+                <p>SKU Aktif</p>
+                <h3>{skuAktif}</h3>
+                <span>Masih memiliki stok</span>
+              </div>
+              <div className="sku-summary-icon"><CheckCircle2 size={21} /></div>
+            </div>
+
+            <div className="sku-summary-card">
+              <div>
+                <p>Stok Habis</p>
+                <h3>{stokHabis}</h3>
+                <span>Perlu segera diisi</span>
+              </div>
+              <div className="sku-summary-icon sku-summary-danger"><AlertCircle size={21} /></div>
+            </div>
+
+            <div className="sku-summary-card">
+              <div>
+                <p>Total Kategori</p>
+                <h3>{totalKategori}</h3>
+                <span>Kategori barang</span>
+              </div>
+              <div className="sku-summary-icon"><Layers3 size={21} /></div>
+            </div>
           </div>
 
-        </div>
-
-        {/* =================================================
-            SEARCH + FILTER + TAMBAH
-        ================================================= */}
-
-        <div className="mt-9 flex shrink-0 items-center gap-6">
-
-          {/* SEARCH */}
-
-          <div className="relative w-75">
-
-            <Search
-              size={20}
-              strokeWidth={1.8}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700"
-            />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Cari SKU, nama barang atau kategori"
-              className="h-11 w-full rounded-md border border-[#22C77A] pl-10 pr-3 text-xs outline-none placeholder:text-gray-400"
-            />
-
-          </div>
-
-          {/* FILTER */}
-
-          <div className="relative">
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowFilter(!showFilter)
-              }
-              className="flex h-11 w-30 items-center justify-between rounded-md border border-[#22C77A] px-4 text-sm text-gray-700"
-            >
-              <span>Filter</span>
-
-              <ChevronDown
-                size={20}
-                strokeWidth={1.8}
-              />
-            </button>
-
-            {showFilter && (
-
-              <div className="absolute left-0 top-13 z-30 w-68.75 rounded-md border border-[#22C77A] bg-white p-4 shadow-lg">
-
-                <p className="mb-2 text-xs font-semibold text-gray-700">
-                  Kategori
-                </p>
-
-                <select
-                  value={filterKategori}
+          <div className="sku-table-card">
+            <div className="sku-toolbar">
+              <div className="sku-search">
+                <Search size={16} />
+                <input
+                  value={search}
                   onChange={(e) => {
-                    setFilterKategori(
-                      e.target.value
-                    );
+                    setSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="mb-4 h-9 w-full rounded-md border border-gray-300 px-2 text-xs outline-none"
-                >
-                  <option>
-                    Semua Kategori
-                  </option>
+                  placeholder="Cari barang atau SKU..."
+                />
+              </div>
 
-                  <option>
-                    Elektronik
-                  </option>
-
-                  <option>
-                    ATK
-                  </option>
-
-                  <option>
-                    Kabel
-                  </option>
-
-                  <option>
-                    Furniture
-                  </option>
-
-                  <option>
-                    Peralatan Gudang
-                  </option>
-                </select>
-
-                <p className="mb-2 text-xs font-semibold text-gray-700">
-                  Lokasi
-                </p>
-
+              <div className="sku-filters">
                 <select
-                  value={filterLokasi}
+                  value={kategori}
                   onChange={(e) => {
-                    setFilterLokasi(
-                      e.target.value
-                    );
+                    setKategori(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="mb-4 h-9 w-full rounded-md border border-gray-300 px-2 text-xs outline-none"
                 >
-                  <option>
-                    Semua Lokasi
-                  </option>
-
-                  <option>A1</option>
-                  <option>A2</option>
-                  <option>B1</option>
-                  <option>B2</option>
+                  <option>Semua Kategori</option>
+                  {kategoriList.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
                 </select>
-
-                <p className="mb-2 text-xs font-semibold text-gray-700">
-                  Stok
-                </p>
 
                 <select
-                  value={filterStok}
+                  value={lokasi}
                   onChange={(e) => {
-                    setFilterStok(
-                      e.target.value
-                    );
+                    setLokasi(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="mb-4 h-9 w-full rounded-md border border-gray-300 px-2 text-xs outline-none"
                 >
-                  <option>
-                    Semua Stok
-                  </option>
-
-                  <option>
-                    Stok Aman
-                  </option>
-
-                  <option>
-                    Stok Menipis
-                  </option>
-
-                  <option>
-                    Stok Habis
-                  </option>
+                  <option>Semua Lokasi</option>
+                  {lokasiList.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
                 </select>
+
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option>Semua Status</option>
+                  <option>Tersedia</option>
+                  <option>Menipis</option>
+                  <option>Habis</option>
+                </select>
+
+                <button className="sku-reset-button" onClick={resetFilter} type="button">
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div className="sku-table-scroll">
+              <table className="sku-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>SKU</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Stok</th>
+                    <th>Lokasi</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {currentData.length > 0 ? (
+                    currentData.map((item, index) => {
+                      const itemStatus = getStatus(item.stok);
+
+                      return (
+                        <tr key={item.id}>
+                          <td>{startIndex + index + 1}</td>
+                          <td className="sku-code">{item.sku}</td>
+                          <td className="sku-product-name">{item.nama}</td>
+                          <td>{item.kategori}</td>
+                          <td>{item.stok}</td>
+                          <td>{item.lokasi}</td>
+                          <td>
+                            <span className={`sku-status sku-status-${itemStatus.toLowerCase()}`}>
+                              {itemStatus}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="sku-row-actions">
+                              <button
+                                type="button"
+                                title="Edit SKU"
+                                onClick={() => setEditData(item)}
+                              >
+                                <Pencil size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                title="Hapus SKU"
+                                className="sku-delete-action"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="sku-empty">
+                        Data SKU tidak ditemukan.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="sku-pagination">
+              <p>
+                Menampilkan <strong>{currentData.length}</strong> dari{" "}
+                <strong>{filteredData.length}</strong> SKU
+              </p>
+
+              <div className="sku-pagination-buttons">
+                <button
+                  type="button"
+                  aria-label="Halaman sebelumnya"
+                  disabled={safePage === 1}
+                  onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                >
+                  <ChevronLeft size={17} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    type="button"
+                    key={page}
+                    className={safePage === page ? "active" : ""}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
 
                 <button
                   type="button"
-                  onClick={resetFilter}
-                  className="h-8 w-full rounded-md bg-[#587653] text-xs text-white"
+                  aria-label="Halaman berikutnya"
+                  disabled={safePage === totalPages}
+                  onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                 >
-                  Reset Filter
+                  <ChevronRight size={17} />
                 </button>
-
               </div>
-
-            )}
-
+            </div>
           </div>
-
-          {/* TAMBAH SKU */}
-
-          <button
-            type="button"
-            onClick={() => {
-              setEditData(null);
-              setShowModal(true);
-            }}
-            className="ml-auto flex h-11 w-34.25 items-center justify-center gap-2 rounded-md bg-[#587653] text-xs text-white transition hover:bg-[#4d6849]"
-          >
-
-            <Plus
-              size={20}
-              strokeWidth={1.8}
-            />
-
-            <span>
-              Tambah SKU
-            </span>
-
-          </button>
-
-        </div>
-
-        {/* =================================================
-            TABEL FULL
-        ================================================= */}
-
-        <div className="mt-5 flex-1 overflow-hidden rounded-md border border-[#22C77A]">
-
-          <table className="h-full w-full border-collapse text-sm">
-
-            {/* =================================================
-                HEADER TABEL
-            ================================================= */}
-
-            <thead>
-
-              <tr className="h-14 bg-[#F5F5F5] text-xs text-gray-700">
-
-                <th className="w-10 border-b border-r border-[#22C77A] px-3 font-normal">
-                  NO
-                </th>
-
-                <th className="w-24 border-b border-r border-[#22C77A] px-3 font-normal">
-                  SKU
-                </th>
-
-                <th className="border-b border-r border-[#22C77A] px-3 font-normal">
-                  Nama Barang
-                </th>
-
-                <th className="border-b border-r border-[#22C77A] px-3 font-normal">
-                  Kategori
-                </th>
-
-                <th className="w-14 border-b border-r border-[#22C77A] px-3 font-normal">
-                  Stok
-                </th>
-
-                <th className="w-16 border-b border-r border-[#22C77A] px-3 font-normal">
-                  Lokasi
-                </th>
-
-                <th className="w-24 border-b border-r border-[#22C77A] px-3 font-normal">
-                  Status
-                </th>
-
-                <th className="w-28 border-b border-[#22C77A] px-3 font-normal">
-                  Aksi
-                </th>
-
-              </tr>
-
-            </thead>
-
-            {/* =================================================
-                BODY TABEL
-            ================================================= */}
-
-            <tbody>
-
-              {/* DATA ASLI */}
-
-              {paginatedData.map(
-                (item, index) => {
-
-                  const status =
-                    getStatus(item.stok);
-
-                  return (
-
-                    <tr
-                      key={item.id}
-                      className="h-14 text-xs text-gray-700"
-                    >
-
-                      {/* NO */}
-
-                      <td className="border-b border-r border-[#22C77A] text-center">
-                        {index + 1}
-                      </td>
-
-                      {/* SKU */}
-
-                      <td className="border-b border-r border-[#22C77A] px-3">
-                        {item.sku}
-                      </td>
-
-                      {/* NAMA */}
-
-                      <td className="border-b border-r border-[#22C77A] text-center">
-                        {item.nama}
-                      </td>
-
-                      {/* KATEGORI */}
-
-                      <td className="border-b border-r border-[#22C77A] text-center">
-                        {item.kategori}
-                      </td>
-
-                      {/* STOK */}
-
-                      <td className="border-b border-r border-[#22C77A] text-center">
-                        {item.stok}
-                      </td>
-
-                      {/* LOKASI */}
-
-                      <td className="border-b border-r border-[#22C77A] text-center">
-                        {item.lokasi}
-                      </td>
-
-                      {/* STATUS */}
-
-                      <td className="border-b border-r border-[#22C77A]">
-
-                        <div className="flex items-center justify-center gap-2">
-
-                          <span
-                            className={`h-3 w-3 rounded-full ${status.color}`}
-                          />
-
-                          <span>
-                            {status.text}
-                          </span>
-
-                        </div>
-
-                      </td>
-
-                      {/* AKSI */}
-
-                      <td className="border-b border-[#22C77A]">
-
-                        <div className="flex items-center justify-center gap-4">
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setEditData(item)
-                            }
-                            title="Edit SKU"
-                            className="text-gray-600"
-                          >
-
-                            <Pencil
-                              size={14}
-                              strokeWidth={1.8}
-                            />
-
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDelete(
-                                item.id
-                              )
-                            }
-                            title="Hapus SKU"
-                            className="text-red-500"
-                          >
-
-                            <Trash2
-                              size={15}
-                              strokeWidth={1.8}
-                            />
-
-                          </button>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  );
-                }
-              )}
-
-              {/* =================================================
-                  BARIS KOSONG
-              ================================================= */}
-
-              {Array.from({
-                length: jumlahBarisKosong,
-              }).map((_, index) => (
-
-                <tr
-                  key={`empty-${index}`}
-                  className="h-14"
-                >
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-r border-[#22C77A]" />
-
-                  <td className="border-b border-[#22C77A]" />
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-        {/* =================================================
-            PAGINATION
-        ================================================= */}
-
-        <div className="flex shrink-0 justify-end py-5">
-
-          <div className="flex items-center gap-2">
-
-            {/* PREVIOUS */}
-
-            <button
-              type="button"
-              disabled={currentPage === 1}
-              onClick={() =>
-                changePage(
-                  currentPage - 1
-                )
-              }
-              className={`flex h-8 w-8 items-center justify-center rounded-md border border-[#22C77A] ${
-                currentPage === 1
-                  ? "cursor-not-allowed opacity-40"
-                  : "hover:bg-[#F1F8F2]"
-              }`}
-            >
-
-              <ChevronLeft
-                size={15}
-                strokeWidth={1.8}
-              />
-
-            </button>
-
-            {/* 1 */}
-
-            <button
-              type="button"
-              onClick={() =>
-                changePage(1)
-              }
-              className={`h-8 w-8 rounded-md text-xs ${
-                currentPage === 1
-                  ? "bg-[#587653] text-white"
-                  : "border border-[#22C77A] text-gray-700"
-              }`}
-            >
-              1
-            </button>
-
-            {/* 2 */}
-
-            <button
-              type="button"
-              onClick={() =>
-                changePage(2)
-              }
-              className={`h-8 w-8 rounded-md text-xs ${
-                currentPage === 2
-                  ? "bg-[#587653] text-white"
-                  : "border border-[#22C77A] text-gray-700"
-              }`}
-            >
-              2
-            </button>
-
-            {/* 3 */}
-
-            <button
-              type="button"
-              onClick={() =>
-                changePage(3)
-              }
-              className={`h-8 w-8 rounded-md text-xs ${
-                currentPage === 3
-                  ? "bg-[#587653] text-white"
-                  : "border border-[#22C77A] text-gray-700"
-              }`}
-            >
-              3
-            </button>
-
-            {/* DOT */}
-
-            <span className="px-1 text-sm text-gray-500">
-              ...
-            </span>
-
-            {/* 10 */}
-
-            <button
-              type="button"
-              onClick={() =>
-                changePage(10)
-              }
-              className={`h-8 w-8 rounded-md text-xs ${
-                currentPage === 10
-                  ? "bg-[#587653] text-white"
-                  : "border border-[#22C77A] text-gray-700"
-              }`}
-            >
-              10
-            </button>
-
-            {/* NEXT */}
-
-            <button
-              type="button"
-              disabled={
-                currentPage === totalPages
-              }
-              onClick={() =>
-                changePage(
-                  currentPage + 1
-                )
-              }
-              className={`flex h-8 w-8 items-center justify-center rounded-md border border-[#22C77A] ${
-                currentPage === totalPages
-                  ? "cursor-not-allowed opacity-40"
-                  : "hover:bg-[#F1F8F2]"
-              }`}
-            >
-
-              <ChevronRight
-                size={15}
-                strokeWidth={1.8}
-              />
-
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* =================================================
-            MODAL TAMBAH
-        ================================================= */}
-
-        {showModal && (
-          <UpdateStokModal
-            mode="add"
-            onClose={() =>
-              setShowModal(false)
-            }
-            onSave={handleAdd}
-          />
-        )}
-
-        {/* =================================================
-            MODAL EDIT
-        ================================================= */}
-
-        {editData && (
-          <UpdateStokModal
-            mode="edit"
-            initialData={editData}
-            onClose={() =>
-              setEditData(null)
-            }
-            onSave={handleEdit}
-          />
-        )}
-
+        </section>
       </main>
 
+      {editData && (
+        <UpdateStokModal
+          mode="edit"
+          initialData={editData}
+          onClose={() => setEditData(null)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

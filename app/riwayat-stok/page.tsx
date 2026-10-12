@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Eye } from "lucide-react";
+import {
+  Search,
+  Eye,
+  ArrowLeftRight,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 
 import Sidebar from "../components/Sidebar";
 import ProfilManager from "../components/ProfilManager";
@@ -16,9 +22,9 @@ type RiwayatStok = {
   catatan: string;
 };
 
-/* =========================================
+/* ================================
    DATA CONTOH
-========================================= */
+================================ */
 
 const semuaData: RiwayatStok[] = [
   {
@@ -203,702 +209,503 @@ const semuaData: RiwayatStok[] = [
   },
 ];
 
-
-/* =========================================
+/* ================================
    HALAMAN RIWAYAT STOK
-========================================= */
+================================ */
 
 export default function RiwayatStokPage() {
-
   const [tab, setTab] = useState("Semua");
-
   const [halaman, setHalaman] = useState(1);
-
   const [cariBarang, setCariBarang] = useState("");
-
-  const [cariPemasok, setCariPemasok] =
-    useState("");
-
-  const [jenisStok, setJenisStok] =
-    useState("");
-
-
-  /* =========================================
-     JUMLAH DATA PER HALAMAN
-  ========================================= */
+  const [cariPemasok, setCariPemasok] = useState("");
+  const [jenisStok, setJenisStok] = useState("");
 
   const jumlahPerHalaman = 5;
 
+  /* ================================
+     DATA CARD RINGKASAN
+  ================================ */
 
-  /* =========================================
-     FILTER DATA
-  ========================================= */
+  const totalTransaksi = semuaData.length;
 
-  const dataFilter = semuaData.filter(
-    (item) => {
+  const totalBarangMasuk = semuaData
+    .filter((item) => item.jenis === "Masuk")
+    .reduce((total, item) => total + item.jumlah, 0);
 
-      const sesuaiTab =
-        tab === "Semua" ||
-        item.jenis === tab;
-
-      const sesuaiJenis =
-        jenisStok === "" ||
-        item.jenis === jenisStok;
-
-      const sesuaiBarang =
-        item.barang
-          .toLowerCase()
-          .includes(
-            cariBarang.toLowerCase()
-          );
-
-      const sesuaiPemasok =
-        item.pemasokTujuan
-          .toLowerCase()
-          .includes(
-            cariPemasok.toLowerCase()
-          );
-
-      return (
-        sesuaiTab &&
-        sesuaiJenis &&
-        sesuaiBarang &&
-        sesuaiPemasok
-      );
-    }
+  const totalBarangKeluar = Math.abs(
+    semuaData
+      .filter((item) => item.jenis === "Keluar")
+      .reduce((total, item) => total + item.jumlah, 0)
   );
 
+  /* ================================
+     FILTER DATA
+  ================================ */
 
-  /* =========================================
-     TOTAL HALAMAN
-  ========================================= */
+  const dataFilter = semuaData.filter((item) => {
+    const sesuaiTab =
+      tab === "Semua" || item.jenis === tab;
+
+    const sesuaiJenis =
+      jenisStok === "" || item.jenis === jenisStok;
+
+    const sesuaiBarang = item.barang
+      .toLowerCase()
+      .includes(cariBarang.toLowerCase());
+
+    const sesuaiPemasok = item.pemasokTujuan
+      .toLowerCase()
+      .includes(cariPemasok.toLowerCase());
+
+    return (
+      sesuaiTab &&
+      sesuaiJenis &&
+      sesuaiBarang &&
+      sesuaiPemasok
+    );
+  });
+
+  /* ================================
+     PAGINATION
+  ================================ */
 
   const totalHalaman = Math.max(
     1,
-    Math.ceil(
-      dataFilter.length /
-        jumlahPerHalaman
-    )
+    Math.ceil(dataFilter.length / jumlahPerHalaman)
   );
 
+  const dataHalaman = dataFilter.slice(
+    (halaman - 1) * jumlahPerHalaman,
+    halaman * jumlahPerHalaman
+  );
 
-  /* =========================================
-     DATA PER HALAMAN
-  ========================================= */
-
-  const dataHalaman =
-    dataFilter.slice(
-      (halaman - 1) *
-        jumlahPerHalaman,
-
-      halaman *
-        jumlahPerHalaman
-    );
-
-
-  /* =========================================
-     PINDAH HALAMAN
-  ========================================= */
-
-  const pindahHalaman = (
-    nomor: number
-  ) => {
-
-    if (
-      nomor >= 1 &&
-      nomor <= totalHalaman
-    ) {
+  const pindahHalaman = (nomor: number) => {
+    if (nomor >= 1 && nomor <= totalHalaman) {
       setHalaman(nomor);
     }
-
   };
 
+  /* ================================
+     KOMPONEN TAMPILAN
+  ================================ */
 
   return (
-
-    <div className="flex min-h-screen bg-[#f7f7f7]">
-
-
-      {/* =====================================
-          SIDEBAR
-      ===================================== */}
-
+    <div className="flex min-h-screen bg-[#f4f7f4]">
       <Sidebar />
 
-
-      {/* =====================================
-          KONTEN
-      ===================================== */}
-
-      <main className="flex-1 px-7 py-5">
-
-
-        {/* ===================================
-            HEADER
-        =================================== */}
-
-        <div className="mb-4 flex items-start justify-between">
-
+      <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-7">
+        {/* HEADER */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-
-            <h1 className="text-[24px] font-bold leading-tight text-[#111111]">
+            <h1 className="text-2xl font-bold leading-tight text-[#26392b]">
               Riwayat Stok
             </h1>
 
-            <p className="mt-1 text-[13px] text-gray-500">
-              Lihat seluruh riwayat barang
-              masuk dan barang keluar dari gudang
+            <p className="mt-1 text-sm text-[#758176]">
+              Lihat seluruh riwayat barang masuk dan barang keluar dari gudang.
             </p>
-
           </div>
 
-
-          <ProfilManager />
-
+          <div className="self-start">
+            <ProfilManager />
+          </div>
         </div>
 
+        {/* ================================
+            CARD RINGKASAN RESPONSIF
+        ================================= */}
 
-        {/* ===================================
-            TAB
-        =================================== */}
+        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* TOTAL TRANSAKSI */}
+          <div className="flex min-w-0 items-center gap-4 rounded-xl border border-[#dfe8de] bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#edf4ec] text-[#587653]">
+              <ArrowLeftRight size={22} strokeWidth={1.8} />
+            </div>
 
-        <div className="mb-3 flex items-center gap-5">
+            <div className="min-w-0">
+              <p className="text-sm text-[#68776b]">
+                Total Transaksi
+              </p>
 
+              <h2 className="mt-1 text-2xl font-semibold text-[#26392b]">
+                {totalTransaksi}
+              </h2>
 
-          {/* SEMUA */}
+              <p className="mt-1 text-xs text-[#879287]">
+                Seluruh aktivitas stok
+              </p>
+            </div>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => {
+          {/* TOTAL BARANG MASUK */}
+          <div className="flex min-w-0 items-center gap-4 rounded-xl border border-[#dfe8de] bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#edf4ec] text-[#587653]">
+              <TrendingUp size={22} strokeWidth={1.8} />
+            </div>
 
-              setTab("Semua");
+            <div className="min-w-0">
+              <p className="text-sm text-[#68776b]">
+                Total Barang Masuk
+              </p>
 
-              setHalaman(1);
+              <h2 className="mt-1 text-2xl font-semibold text-[#587653]">
+                {totalBarangMasuk}
+              </h2>
 
-            }}
-            className={`h-7 rounded-[6px] border border-[#20c987] px-4 text-[11px] ${
-              tab === "Semua"
-                ? "bg-[#dff8ea]"
-                : "bg-white"
-            }`}
-          >
-            Semua
-          </button>
+              <p className="mt-1 text-xs text-[#879287]">
+                Total unit yang diterima
+              </p>
+            </div>
+          </div>
 
+          {/* TOTAL BARANG KELUAR */}
+          <div className="flex min-w-0 items-center gap-4 rounded-xl border border-[#dfe8de] bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:col-span-2 sm:p-5 xl:col-span-1">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#f8eeee] text-[#bd6969]">
+              <TrendingDown size={22} strokeWidth={1.8} />
+            </div>
 
-          {/* STOK MASUK */}
+            <div className="min-w-0">
+              <p className="text-sm text-[#68776b]">
+                Total Barang Keluar
+              </p>
 
-          <button
-            type="button"
-            onClick={() => {
+              <h2 className="mt-1 text-2xl font-semibold text-[#bd6969]">
+                {totalBarangKeluar}
+              </h2>
 
-              setTab("Masuk");
+              <p className="mt-1 text-xs text-[#879287]">
+                Total unit yang dikeluarkan
+              </p>
+            </div>
+          </div>
+        </section>
 
-              setHalaman(1);
+        {/* ================================
+            TAB JENIS STOK
+        ================================= */}
 
-            }}
-            className={`h-7 rounded-[6px] border border-[#20c987] px-4 text-[11px] ${
-              tab === "Masuk"
-                ? "bg-[#dff8ea]"
-                : "bg-white"
-            }`}
-          >
-            Stok Masuk
-          </button>
-
-
-          {/* STOK KELUAR */}
-
-          <button
-            type="button"
-            onClick={() => {
-
-              setTab("Keluar");
-
-              setHalaman(1);
-
-            }}
-            className={`h-7 rounded-[6px] border border-[#20c987] px-4 text-[11px] ${
-              tab === "Keluar"
-                ? "bg-[#dff8ea]"
-                : "bg-white"
-            }`}
-          >
-            Stok Keluar
-          </button>
-
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {["Semua", "Masuk", "Keluar"].map((jenis) => (
+            <button
+              key={jenis}
+              type="button"
+              onClick={() => {
+                setTab(jenis);
+                setHalaman(1);
+              }}
+              className={`rounded-lg border px-4 py-2 text-xs font-medium transition-colors ${
+                tab === jenis
+                  ? "border-[#587653] bg-[#587653] text-white"
+                  : "border-[#d8e3d7] bg-white text-[#526356] hover:bg-[#edf4ec]"
+              }`}
+            >
+              {jenis === "Semua"
+                ? "Semua"
+                : `Stok ${jenis}`}
+            </button>
+          ))}
         </div>
 
-
-        {/* ===================================
+        {/* ================================
             FILTER
-        =================================== */}
+        ================================= */}
 
-        <div className="mb-3 w-full rounded-[7px] border border-[#20c987] bg-white p-3">
-
-          <div className="grid grid-cols-[110px_110px_1fr_1fr] gap-[18px]">
-
-
+        <section className="mb-4 rounded-xl border border-[#dfe8de] bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[130px_140px_minmax(180px,1fr)_minmax(180px,1fr)]">
             {/* PERIODE */}
-
             <div>
-
-              <label className="mb-1.5 block text-[11px] text-gray-500">
+              <label className="mb-2 block text-xs font-medium text-[#68776b]">
                 Periode
               </label>
 
               <select
-                className="h-7 w-full rounded-[7px] border border-[#20c987] bg-white px-2 text-[10px] outline-none"
+                defaultValue=""
+                className="h-10 w-full rounded-lg border border-[#d8e3d7] bg-white px-3 text-sm text-[#35483a] outline-none focus:border-[#587653] focus:ring-2 focus:ring-[#587653]/10"
               >
-
-                <option value="">
-                </option>
-
-                <option value="hari">
-                  Hari Ini
-                </option>
-
-                <option value="minggu">
-                  Minggu Ini
-                </option>
-
-                <option value="bulan">
-                  Bulan Ini
-                </option>
-
+                <option value="">Semua Periode</option>
+                <option value="hari">Hari Ini</option>
+                <option value="minggu">Minggu Ini</option>
+                <option value="bulan">Bulan Ini</option>
               </select>
-
             </div>
 
-
             {/* JENIS STOK */}
-
             <div>
-
-              <label className="mb-1.5 block text-[11px] text-gray-500">
+              <label className="mb-2 block text-xs font-medium text-[#68776b]">
                 Jenis Stok
               </label>
 
               <select
                 value={jenisStok}
                 onChange={(e) => {
-
-                  setJenisStok(
-                    e.target.value
-                  );
-
+                  setJenisStok(e.target.value);
                   setHalaman(1);
-
                 }}
-                className="h-7 w-full rounded-[7px] border border-[#20c987] bg-white px-2 text-[10px] outline-none"
+                className="h-10 w-full rounded-lg border border-[#d8e3d7] bg-white px-3 text-sm text-[#35483a] outline-none focus:border-[#587653] focus:ring-2 focus:ring-[#587653]/10"
               >
-
-                <option value="">
-                </option>
-
-                <option value="Masuk">
-                  Masuk
-                </option>
-
-                <option value="Keluar">
-                  Keluar
-                </option>
-
+                <option value="">Semua Jenis</option>
+                <option value="Masuk">Masuk</option>
+                <option value="Keluar">Keluar</option>
               </select>
-
             </div>
 
-
             {/* CARI BARANG */}
-
             <div>
-
-              <label className="mb-1.5 block text-[11px] text-gray-500">
+              <label className="mb-2 block text-xs font-medium text-[#68776b]">
                 Cari Barang
               </label>
 
               <div className="relative">
-
                 <Search
-                  size={13}
-                  strokeWidth={1.7}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  size={16}
+                  strokeWidth={1.8}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#879287]"
                 />
 
                 <input
                   type="text"
                   value={cariBarang}
                   onChange={(e) => {
-
-                    setCariBarang(
-                      e.target.value
-                    );
-
+                    setCariBarang(e.target.value);
                     setHalaman(1);
-
                   }}
-                  className="h-7 w-full rounded-[7px] border border-[#20c987] bg-white pl-7 pr-2 text-[10px] outline-none"
+                  placeholder="Nama barang..."
+                  className="h-10 w-full rounded-lg border border-[#d8e3d7] bg-white pl-9 pr-3 text-sm text-[#35483a] outline-none placeholder:text-[#a0aaa0] focus:border-[#587653] focus:ring-2 focus:ring-[#587653]/10"
                 />
-
               </div>
-
             </div>
 
-
             {/* CARI PEMASOK */}
-
             <div>
-
-              <label className="mb-1.5 block text-[11px] text-gray-500">
-                Cari Pemasok
+              <label className="mb-2 block text-xs font-medium text-[#68776b]">
+                Cari Pemasok / Tujuan
               </label>
 
               <div className="relative">
-
                 <Search
-                  size={13}
-                  strokeWidth={1.7}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  size={16}
+                  strokeWidth={1.8}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#879287]"
                 />
 
                 <input
                   type="text"
                   value={cariPemasok}
                   onChange={(e) => {
-
-                    setCariPemasok(
-                      e.target.value
-                    );
-
+                    setCariPemasok(e.target.value);
                     setHalaman(1);
-
                   }}
-                  className="h-7 w-full rounded-[7px] border border-[#20c987] bg-white pl-7 pr-2 text-[10px] outline-none"
+                  placeholder="Nama pemasok atau tujuan..."
+                  className="h-10 w-full rounded-lg border border-[#d8e3d7] bg-white pl-9 pr-3 text-sm text-[#35483a] outline-none placeholder:text-[#a0aaa0] focus:border-[#587653] focus:ring-2 focus:ring-[#587653]/10"
                 />
-
               </div>
-
             </div>
+          </div>
+        </section>
 
+        {/* ================================
+            TABEL RIWAYAT
+        ================================= */}
+
+        <section className="overflow-hidden rounded-xl border border-[#dfe8de] bg-white shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-[#e6ece5] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <h2 className="text-sm font-semibold text-[#35483a]">
+              Daftar Riwayat Stok
+            </h2>
+
+            <p className="text-xs text-[#879287]">
+              Menampilkan {dataHalaman.length} dari {dataFilter.length} transaksi
+            </p>
           </div>
 
-        </div>
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[850px] border-collapse text-sm">
+              <thead>
+                <tr className="bg-[#f5f8f4] text-left text-xs text-[#68776b]">
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    Tanggal
+                  </th>
 
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    Jenis
+                  </th>
 
-        {/* ===================================
-            TABEL
-        =================================== */}
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    Barang
+                  </th>
 
-        <div className="w-full overflow-hidden rounded-[6px] border border-[#20c987]">
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    SKU
+                  </th>
 
-          <table className="w-full table-fixed border-collapse text-[10px]">
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 text-center font-medium">
+                    Jumlah
+                  </th>
 
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    Pemasok / Tujuan
+                  </th>
 
-            {/* =================================
-                HEADER TABEL
-            ================================= */}
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 font-medium">
+                    Catatan
+                  </th>
 
-            <thead>
+                  <th className="border-b border-[#e3ebe1] px-4 py-4 text-center font-medium">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
 
-              <tr className="bg-[#f1f2f2]">
-
-                <th className="h-[50px] w-[13%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Tanggal
-                </th>
-
-                <th className="h-[50px] w-[14%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Jenis
-                </th>
-
-                <th className="h-[50px] w-[17%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Barang
-                </th>
-
-                <th className="h-[50px] w-[10%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  SKU
-                </th>
-
-                <th className="h-[50px] w-[10%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Jumlah
-                </th>
-
-                <th className="h-[50px] w-[16%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Pemasok/Tujuan
-                </th>
-
-                <th className="h-[50px] w-[12%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Catatan
-                </th>
-
-                <th className="h-[50px] w-[8%] border border-[#8bdcb7] px-2 font-normal text-gray-600">
-                  Aksi
-                </th>
-
-              </tr>
-
-            </thead>
-
-
-            {/* =================================
-                ISI TABEL
-            ================================= */}
-
-            <tbody>
-
-
-              {/* DATA */}
-
-              {dataHalaman.map(
-                (item, index) => (
-
+              <tbody>
+                {dataHalaman.map((item, index) => (
                   <tr
                     key={`${item.sku}-${item.jenis}-${index}`}
+                    className="transition-colors hover:bg-[#f8faf7]"
                   >
-
-
-                    {/* TANGGAL */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center text-[10px]">
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-xs text-[#526356]">
                       {item.tanggal}
                     </td>
 
-
-                    {/* JENIS */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-
+                    <td className="border-b border-[#edf1eb] px-4 py-4">
                       <span
-                        className={`inline-flex h-[19px] min-w-[56px] items-center justify-center rounded-full px-2 text-[9px] ${
-                          item.jenis ===
-                          "Masuk"
-                            ? "bg-[#d8f3e5] text-[#4b7c62]"
-                            : "bg-[#f5d5d5] text-[#c95a5a]"
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                          item.jenis === "Masuk"
+                            ? "bg-[#e7f3e8] text-[#587653]"
+                            : "bg-[#f9eaea] text-[#bd6969]"
                         }`}
                       >
                         {item.jenis}
                       </span>
-
                     </td>
 
-
-                    {/* BARANG */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-                      {item.barang}
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-xs font-medium text-[#35483a]">
+                      {item.barang || "—"}
                     </td>
 
-
-                    {/* SKU */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-                      {item.sku}
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-xs text-[#526356]">
+                      {item.sku || "—"}
                     </td>
-
-
-                    {/* JUMLAH */}
 
                     <td
-                      className={`h-[54px] border border-[#8bdcb7] px-2 text-center ${
+                      className={`border-b border-[#edf1eb] px-4 py-4 text-center text-xs font-semibold ${
                         item.jumlah >= 0
-                          ? "text-[#42b65c]"
-                          : "text-[#ff4d4d]"
+                          ? "text-[#587653]"
+                          : "text-[#bd6969]"
                       }`}
                     >
                       {item.jumlah >= 0
-                        ? `+ ${item.jumlah}`
+                        ? `+${item.jumlah}`
                         : item.jumlah}
                     </td>
 
-
-                    {/* PEMASOK / TUJUAN */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-                      {item.pemasokTujuan}
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-xs text-[#526356]">
+                      {item.pemasokTujuan || "—"}
                     </td>
 
-
-                    {/* CATATAN */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-                      {item.catatan}
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-xs text-[#68776b]">
+                      {item.catatan || "—"}
                     </td>
 
-
-                    {/* AKSI */}
-
-                    <td className="h-[54px] border border-[#8bdcb7] px-2 text-center">
-
+                    <td className="border-b border-[#edf1eb] px-4 py-4 text-center">
                       <button
                         type="button"
+                        title="Lihat detail"
                         onClick={() =>
                           alert(
-                            `Detail ${item.barang}`
+                            `Detail transaksi\nBarang: ${
+                              item.barang || "Belum diisi"
+                            }\nSKU: ${item.sku || "Belum diisi"}\nJenis: ${
+                              item.jenis
+                            }\nJumlah: ${item.jumlah}`
                           )
                         }
-                        className="text-gray-600 transition hover:text-[#20c987]"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#68776b] transition-colors hover:bg-[#edf4ec] hover:text-[#587653]"
                       >
-
-                        <Eye
-                          size={14}
-                          strokeWidth={1.8}
-                        />
-
+                        <Eye size={17} strokeWidth={1.8} />
                       </button>
-
                     </td>
-
                   </tr>
+                ))}
 
-                )
-              )}
-
-
-              {/* =================================
-                  BARIS KOSONG
-              ================================= */}
-
-              {Array.from({
-
-                length:
-                  Math.max(
-                    0,
-                    jumlahPerHalaman -
-                      dataHalaman.length
-                  ),
-
-              }).map(
-                (_, index) => (
-
-                  <tr
-                    key={`empty-${index}`}
-                  >
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
-                    <td className="h-[54px] border border-[#8bdcb7]"></td>
-
+                {dataHalaman.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="px-4 py-12 text-center text-sm text-[#879287]"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Search size={24} strokeWidth={1.5} />
+                        <p>Data riwayat stok tidak ditemukan.</p>
+                        <p className="text-xs">
+                          Coba ubah kata kunci pencarian atau filter.
+                        </p>
+                      </div>
+                    </td>
                   </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-                )
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-
-        {/* ===================================
+        {/* ================================
             PAGINATION
-        =================================== */}
+        ================================= */}
 
-        <div className="mt-3 flex w-full justify-end">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[#879287]">
+            Halaman {halaman} dari {totalHalaman}
+          </p>
 
-          <div className="flex items-center gap-1">
-
-
-            {/* PREVIOUS */}
-
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
-              disabled={
-                halaman === 1
-              }
-              onClick={() =>
-                pindahHalaman(
-                  halaman - 1
-                )
-              }
-              className="flex h-7 w-7 items-center justify-center rounded-[5px] border border-[#20c987] bg-white text-[11px] text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={halaman === 1}
+              onClick={() => pindahHalaman(halaman - 1)}
+              className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-[#d8e3d7] bg-white px-3 text-sm text-[#526356] transition-colors hover:bg-[#edf4ec] disabled:cursor-not-allowed disabled:opacity-40"
             >
               ‹
             </button>
 
-
-            {/* NOMOR HALAMAN */}
-
             {Array.from(
-              {
-                length: Math.min(
-                  totalHalaman,
-                  10
-                ),
-              },
-              (_, index) =>
-                index + 1
-            ).map(
-              (nomor) => (
+              { length: Math.min(totalHalaman, 5) },
+              (_, index) => {
+                const nomor =
+                  totalHalaman <= 5
+                    ? index + 1
+                    : Math.min(
+                        Math.max(halaman - 2, 1),
+                        totalHalaman - 4
+                      ) + index;
 
-                <button
-                  key={nomor}
-                  type="button"
-                  onClick={() =>
-                    pindahHalaman(
-                      nomor
-                    )
-                  }
-                  className={`flex h-7 w-7 items-center justify-center rounded-[5px] border text-[10px] ${
-                    halaman === nomor
-                      ? "border-[#587653] bg-[#587653] text-white"
-                      : "border-[#20c987] bg-white text-gray-700"
-                  }`}
-                >
-                  {nomor}
-                </button>
-
-              )
+                return (
+                  <button
+                    key={nomor}
+                    type="button"
+                    onClick={() => pindahHalaman(nomor)}
+                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm transition-colors ${
+                      halaman === nomor
+                        ? "border-[#587653] bg-[#587653] text-white"
+                        : "border-[#d8e3d7] bg-white text-[#526356] hover:bg-[#edf4ec]"
+                    }`}
+                  >
+                    {nomor}
+                  </button>
+                );
+              }
             )}
-
-
-            {/* TITIK */}
-
-            {totalHalaman > 10 && (
-
-              <span className="px-1 text-[11px] text-gray-600">
-                ...
-              </span>
-
-            )}
-
-
-            {/* NEXT */}
 
             <button
               type="button"
-              disabled={
-                halaman ===
-                totalHalaman
-              }
-              onClick={() =>
-                pindahHalaman(
-                  halaman + 1
-                )
-              }
-              className="flex h-7 w-7 items-center justify-center rounded-[5px] border border-[#20c987] bg-white text-[11px] text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={halaman === totalHalaman}
+              onClick={() => pindahHalaman(halaman + 1)}
+              className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-[#d8e3d7] bg-white px-3 text-sm text-[#526356] transition-colors hover:bg-[#edf4ec] disabled:cursor-not-allowed disabled:opacity-40"
             >
               ›
             </button>
-
           </div>
-
         </div>
-
       </main>
-
     </div>
-
   );
 }

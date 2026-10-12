@@ -1,10 +1,23 @@
+
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   Pencil,
   Trash2,
+  Truck,
+  Users,
+  UserCheck,
+  UserX,
+  ChevronLeft,
+  ChevronRight,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Package,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import Sidebar from "../components/Sidebar";
@@ -13,7 +26,8 @@ import ProfilManager from "../components/ProfilManager";
 type Pemasok = {
   id: number;
   nama: string;
-  kontak: string;
+  telepon: string;
+  email: string;
   alamat: string;
   kategori: string;
   status: "Aktif" | "Non Aktif";
@@ -23,8 +37,8 @@ const dataPemasok: Pemasok[] = [
   {
     id: 1,
     nama: "PT ABC Sejahtera",
-    kontak:
-      "No Telp: 1029383745\nEmail: abc@gmail.com",
+    telepon: "1029383745",
+    email: "abc@gmail.com",
     alamat: "Jl. Selamat",
     kategori: "Elektronik",
     status: "Aktif",
@@ -32,7 +46,8 @@ const dataPemasok: Pemasok[] = [
   {
     id: 2,
     nama: "",
-    kontak: "",
+    telepon: "",
+    email: "",
     alamat: "",
     kategori: "",
     status: "Non Aktif",
@@ -40,7 +55,8 @@ const dataPemasok: Pemasok[] = [
   {
     id: 3,
     nama: "",
-    kontak: "",
+    telepon: "",
+    email: "",
     alamat: "",
     kategori: "",
     status: "Aktif",
@@ -48,7 +64,8 @@ const dataPemasok: Pemasok[] = [
   {
     id: 4,
     nama: "",
-    kontak: "",
+    telepon: "",
+    email: "",
     alamat: "",
     kategori: "",
     status: "Aktif",
@@ -56,7 +73,8 @@ const dataPemasok: Pemasok[] = [
   {
     id: 5,
     nama: "",
-    kontak: "",
+    telepon: "",
+    email: "",
     alamat: "",
     kategori: "",
     status: "Aktif",
@@ -64,687 +82,572 @@ const dataPemasok: Pemasok[] = [
   {
     id: 6,
     nama: "",
-    kontak: "",
+    telepon: "",
+    email: "",
     alamat: "",
     kategori: "",
     status: "Aktif",
   },
 ];
 
+const PAGE_SIZE = 6;
+
 export default function DataPemasokPage() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "Semua" | Pemasok["status"]
+  >("Semua");
+
   const [halaman, setHalaman] = useState(1);
 
-  const filteredData = dataPemasok.filter((item) =>
-    item.nama
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  // Filter data berdasarkan pencarian dan status
+  const filteredData = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return dataPemasok.filter((item) => {
+      const cocokPencarian =
+        !keyword ||
+        [
+          item.nama,
+          item.telepon,
+          item.email,
+          item.alamat,
+          item.kategori,
+        ].some((value) =>
+          value.toLowerCase().includes(keyword)
+        );
+
+      const cocokStatus =
+        statusFilter === "Semua" ||
+        item.status === statusFilter;
+
+      return cocokPencarian && cocokStatus;
+    });
+  }, [search, statusFilter]);
+
+  // Pagination
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredData.length / PAGE_SIZE)
   );
 
+  const currentPage = Math.min(halaman, totalPages);
+
+  const pageData = filteredData.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  // Statistik pemasok
+  const aktif = dataPemasok.filter(
+    (item) => item.status === "Aktif"
+  ).length;
+
+  const nonAktif = dataPemasok.filter(
+    (item) => item.status === "Non Aktif"
+  ).length;
+
+  // Pencarian
+  const changeSearch = (value: string) => {
+    setSearch(value);
+    setHalaman(1);
+  };
+
+  // Aksi edit dan hapus
   const handleEdit = (id: number) => {
     alert(`Edit pemasok ${id}`);
   };
 
   const handleDelete = (id: number) => {
-    alert(`Hapus pemasok ${id}`);
-  };
+    const konfirmasi = window.confirm(
+      `Apakah kamu yakin ingin menghapus pemasok ${id}?`
+    );
 
-  const handlePage = (page: number) => {
-    if (page < 1 || page > 10) {
-      return;
+    if (konfirmasi) {
+      alert(
+        "Hubungkan aksi hapus ini ke database agar data benar-benar terhapus."
+      );
     }
-
-    setHalaman(page);
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f7f7f7]">
-
-      {/* =====================================
-          SIDEBAR
-      ===================================== */}
-
+    <div className="supplier-page">
       <Sidebar />
 
+      <main className="supplier-main">
+        {/* HEADER */}
+        <header className="supplier-topbar">
+          <div className="supplier-heading">
+            <h1>Data Pemasok</h1>
 
-      {/* =====================================
-          KONTEN UTAMA
-      ===================================== */}
-
-      <main className="flex-1 px-[10px] py-[18px]">
-
-        {/* ===================================
-            HEADER
-        =================================== */}
-
-        <div className="mb-[16px] flex items-start justify-between">
-
-          <div>
-
-            <h1 className="text-[20px] font-bold leading-tight text-[#111111]">
-              Data Pemasok
-            </h1>
-
-            <p className="mt-[4px] text-[11px] text-gray-500">
-              Kelola data pemasok yang bekerja sama dengan gudang
+            <p>
+              Kelola informasi dan pantau status pemasok
+              yang bekerja sama dengan gudang.
             </p>
-
           </div>
 
           <ProfilManager />
+        </header>
 
-        </div>
-
-
-        {/* ===================================
-            SEARCH
-        =================================== */}
-
-        <div className="mb-[34px]">
-
-          <div className="relative w-[490px]">
-
-            <Search
-              size={18}
-              strokeWidth={1.8}
-              className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[#111827]"
-            />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setHalaman(1);
-              }}
-              placeholder="Cari nama pemasok"
-              className="
-                h-[40px]
-                w-full
-                rounded-[6px]
-                border
-                border-[#20c987]
-                bg-white
-                pl-[43px]
-                pr-[12px]
-                text-[11px]
-                text-gray-700
-                outline-none
-                placeholder:text-gray-400
-                focus:border-[#20c987]
-              "
-            />
-
+        {/* BANNER */}
+        <section className="supplier-welcome">
+          <div className="supplier-welcome-icon">
+            <Truck size={25} />
           </div>
 
-        </div>
-
-
-        {/* ===================================
-            TABEL DATA PEMASOK
-        =================================== */}
-
-        <div className="w-full overflow-hidden rounded-[6px] border border-[#20c987] bg-white">
-
-          <table className="w-full table-fixed border-collapse">
-
-            {/* =================================
-                HEADER TABEL
-            ================================= */}
-
-            <thead>
-
-              <tr className="bg-[#f1f2f2]">
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[6%]
-                    border
-                    border-[#8bdcb7]
-                    px-1
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  NO
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[14%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  Nama Pemasok
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[17%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  Kontak
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[13%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  Alamat
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[12%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    leading-[12px]
-                    text-gray-600
-                  "
-                >
-                  Kategori
-                  <br />
-                  Barang
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[12%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  Status
-                </th>
-
-                <th
-                  className="
-                    h-[48px]
-                    w-[9%]
-                    border
-                    border-[#8bdcb7]
-                    px-2
-                    text-center
-                    text-[10px]
-                    font-normal
-                    text-gray-600
-                  "
-                >
-                  Aksi
-                </th>
-
-              </tr>
-
-            </thead>
-
-
-            {/* =================================
-                BODY TABEL
-            ================================= */}
-
-            <tbody>
-
-              {filteredData.map((item) => (
-
-                <tr key={item.id}>
-
-                  {/* NO */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-1
-                      text-center
-                      text-[10px]
-                      text-gray-700
-                    "
-                  >
-                    {item.id}
-                  </td>
-
-
-                  {/* NAMA PEMASOK */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-2
-                      text-center
-                      text-[10px]
-                      text-gray-700
-                    "
-                  >
-                    {item.nama}
-                  </td>
-
-
-                  {/* KONTAK */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      whitespace-pre-line
-                      border
-                      border-[#8bdcb7]
-                      px-2
-                      text-left
-                      align-middle
-                      text-[9px]
-                      leading-[12px]
-                      text-gray-600
-                    "
-                  >
-                    {item.kontak}
-                  </td>
-
-
-                  {/* ALAMAT */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-2
-                      text-center
-                      text-[9px]
-                      text-gray-600
-                    "
-                  >
-                    {item.alamat}
-                  </td>
-
-
-                  {/* KATEGORI */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-2
-                      text-center
-                      text-[9px]
-                      text-gray-600
-                    "
-                  >
-                    {item.kategori}
-                  </td>
-
-
-                  {/* STATUS */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-2
-                      text-center
-                    "
-                  >
-
-                    {item.status === "Aktif" ? (
-
-                      <span
-                        className="
-                          inline-flex
-                          min-w-[52px]
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-[#dff8e8]
-                          px-[9px]
-                          py-[6px]
-                          text-[9px]
-                          text-[#4b7c62]
-                        "
-                      >
-                        Aktif
-                      </span>
-
-                    ) : (
-
-                      <span
-                        className="
-                          inline-flex
-                          min-w-[52px]
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-[#ff9b9b]
-                          px-[8px]
-                          py-[6px]
-                          text-[9px]
-                          text-[#7d3d3d]
-                        "
-                      >
-                        Non Aktif
-                      </span>
-
-                    )}
-
-                  </td>
-
-
-                  {/* AKSI */}
-
-                  <td
-                    className="
-                      h-[52px]
-                      border
-                      border-[#8bdcb7]
-                      px-1
-                      text-center
-                    "
-                  >
-
-                    <div className="flex items-center justify-center gap-[10px]">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleEdit(item.id)
-                        }
-                        className="
-                          text-gray-500
-                          transition
-                          hover:text-[#20c987]
-                        "
-                      >
-
-                        <Pencil
-                          size={14}
-                          strokeWidth={1.8}
-                        />
-
-                      </button>
-
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDelete(item.id)
-                        }
-                        className="
-                          text-[#ff4d4d]
-                          transition
-                          hover:text-red-700
-                        "
-                      >
-
-                        <Trash2
-                          size={14}
-                          strokeWidth={1.8}
-                        />
-
-                      </button>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-
-              {/* =================================
-                  BARIS KOSONG
-              ================================= */}
-
-              {Array.from({
-                length: Math.max(
-                  0,
-                  6 - filteredData.length
-                ),
-              }).map((_, index) => (
-
-                <tr key={`empty-${index}`}>
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                  <td className="h-[52px] border border-[#8bdcb7]" />
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-
-        {/* ===================================
-            PAGINATION
-        =================================== */}
-
-        <div className="mt-[24px] flex w-full justify-end">
-
-          <div className="flex items-center gap-[5px]">
-
-            {/* PREVIOUS */}
-
-            <button
-              type="button"
-              disabled={halaman === 1}
-              onClick={() =>
-                handlePage(halaman - 1)
-              }
-              className="
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                border-[#20c987]
-                bg-white
-                text-[11px]
-                text-gray-600
-                disabled:cursor-not-allowed
-                disabled:opacity-40
-              "
-            >
-              ‹
-            </button>
-
-
-            {/* PAGE 1 */}
-
-            <button
-              type="button"
-              onClick={() => handlePage(1)}
-              className={`
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                text-[10px]
-                ${
-                  halaman === 1
-                    ? "border-[#587653] bg-[#587653] text-white"
-                    : "border-[#20c987] bg-white text-gray-700"
-                }
-              `}
-            >
-              1
-            </button>
-
-
-            {/* PAGE 2 */}
-
-            <button
-              type="button"
-              onClick={() => handlePage(2)}
-              className={`
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                text-[10px]
-                ${
-                  halaman === 2
-                    ? "border-[#587653] bg-[#587653] text-white"
-                    : "border-[#20c987] bg-white text-gray-700"
-                }
-              `}
-            >
-              2
-            </button>
-
-
-            {/* PAGE 3 */}
-
-            <button
-              type="button"
-              onClick={() => handlePage(3)}
-              className={`
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                text-[10px]
-                ${
-                  halaman === 3
-                    ? "border-[#587653] bg-[#587653] text-white"
-                    : "border-[#20c987] bg-white text-gray-700"
-                }
-              `}
-            >
-              3
-            </button>
-
-
-            {/* DOT */}
-
-            <span className="px-[3px] text-[11px] text-gray-600">
-              ...
+          <div>
+            <h2>
+              Hubungan pemasok lebih terorganisir
+            </h2>
+
+            <p>
+              Semua informasi pemasok dalam satu tempat,
+              mudah dicari dan dikelola.
+            </p>
+          </div>
+
+          <div className="supplier-welcome-mark">
+            <Package size={42} strokeWidth={1.2} />
+          </div>
+        </section>
+
+        {/* CARD STATISTIK INTERAKTIF */}
+        <section
+          className="supplier-stats"
+          aria-label="Ringkasan pemasok"
+        >
+          {/* TOTAL PEMASOK */}
+          <button
+            type="button"
+            className={`supplier-stat-card ${
+              statusFilter === "Semua"
+                ? "is-selected"
+                : ""
+            }`}
+            onClick={() => {
+              setStatusFilter("Semua");
+              setHalaman(1);
+            }}
+            aria-pressed={statusFilter === "Semua"}
+          >
+            <div className="supplier-stat-icon stat-purple">
+              <Users size={20} />
+            </div>
+
+            <div className="supplier-stat-content">
+              <span>Total pemasok</span>
+
+              <strong>{dataPemasok.length}</strong>
+
+              <small>
+                {statusFilter === "Semua"
+                  ? "Semua pemasok ditampilkan"
+                  : "Klik untuk melihat semua"}
+              </small>
+            </div>
+          </button>
+
+          {/* PEMASOK AKTIF */}
+          <button
+            type="button"
+            className={`supplier-stat-card ${
+              statusFilter === "Aktif"
+                ? "is-selected"
+                : ""
+            }`}
+            onClick={() => {
+              setStatusFilter("Aktif");
+              setHalaman(1);
+            }}
+            aria-pressed={statusFilter === "Aktif"}
+          >
+            <div className="supplier-stat-icon stat-green">
+              <UserCheck size={20} />
+            </div>
+
+            <div className="supplier-stat-content">
+              <span>Pemasok aktif</span>
+
+              <strong>{aktif}</strong>
+
+              <small>
+                {statusFilter === "Aktif"
+                  ? "Menampilkan pemasok aktif"
+                  : "Klik untuk melihat data aktif"}
+              </small>
+            </div>
+          </button>
+
+          {/* PEMASOK NONAKTIF */}
+          <button
+            type="button"
+            className={`supplier-stat-card ${
+              statusFilter === "Non Aktif"
+                ? "is-selected"
+                : ""
+            }`}
+            onClick={() => {
+              setStatusFilter("Non Aktif");
+              setHalaman(1);
+            }}
+            aria-pressed={statusFilter === "Non Aktif"}
+          >
+            <div className="supplier-stat-icon stat-red">
+              <UserX size={20} />
+            </div>
+
+            <div className="supplier-stat-content">
+              <span>Pemasok nonaktif</span>
+
+              <strong>{nonAktif}</strong>
+
+              <small>
+                {statusFilter === "Non Aktif"
+                  ? "Menampilkan pemasok nonaktif"
+                  : "Klik untuk melihat data nonaktif"}
+              </small>
+            </div>
+          </button>
+        </section>
+
+        {/* TABEL DATA PEMASOK */}
+        <section className="supplier-table-card">
+          <div className="supplier-table-heading">
+            <div>
+              <h2>Daftar Pemasok</h2>
+
+              <p>
+                Lihat dan kelola informasi pemasok Anda.
+              </p>
+            </div>
+
+            <span className="supplier-count">
+              <Users size={15} />
+              {filteredData.length} data
             </span>
-
-
-            {/* PAGE 10 */}
-
-            <button
-              type="button"
-              onClick={() => handlePage(10)}
-              className={`
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                text-[10px]
-                ${
-                  halaman === 10
-                    ? "border-[#587653] bg-[#587653] text-white"
-                    : "border-[#20c987] bg-white text-gray-700"
-                }
-              `}
-            >
-              10
-            </button>
-
-
-            {/* NEXT */}
-
-            <button
-              type="button"
-              disabled={halaman === 10}
-              onClick={() =>
-                handlePage(halaman + 1)
-              }
-              className="
-                flex
-                h-[23px]
-                w-[23px]
-                items-center
-                justify-center
-                rounded-[5px]
-                border
-                border-[#20c987]
-                bg-white
-                text-[11px]
-                text-gray-600
-                disabled:cursor-not-allowed
-                disabled:opacity-40
-              "
-            >
-              ›
-            </button>
-
           </div>
 
-        </div>
+          {/* SEARCH DAN FILTER */}
+          <div className="supplier-toolbar">
+            <label className="supplier-search">
+              <Search size={18} />
 
+              <input
+                type="search"
+                value={search}
+                onChange={(event) =>
+                  changeSearch(event.target.value)
+                }
+                placeholder="Cari nama, kontak, alamat..."
+                aria-label="Cari data pemasok"
+              />
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => changeSearch("")}
+                  aria-label="Hapus pencarian"
+                >
+                  ×
+                </button>
+              )}
+            </label>
+
+            <label className="supplier-filter">
+              <SlidersHorizontal size={16} />
+
+              <select
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(
+                    event.target.value as
+                      | "Semua"
+                      | Pemasok["status"]
+                  );
+
+                  setHalaman(1);
+                }}
+                aria-label="Filter status pemasok"
+              >
+                <option value="Semua">
+                  Semua status
+                </option>
+
+                <option value="Aktif">
+                  Aktif
+                </option>
+
+                <option value="Non Aktif">
+                  Nonaktif
+                </option>
+              </select>
+            </label>
+          </div>
+
+          {/* TABEL */}
+          <div className="supplier-table-scroll">
+            <table className="supplier-table">
+              <thead>
+                <tr>
+                  <th className="supplier-number">No.</th>
+                  <th>Nama Pemasok</th>
+                  <th>Kontak</th>
+                  <th>Alamat</th>
+                  <th>Kategori Barang</th>
+                  <th>Status</th>
+                  <th className="supplier-actions-heading">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {pageData.map((item, index) => (
+                  <tr key={item.id}>
+                    <td className="supplier-number">
+                      {(currentPage - 1) * PAGE_SIZE +
+                        index +
+                        1}
+                    </td>
+
+                    {/* NAMA PEMASOK */}
+                    <td>
+                      {item.nama ? (
+                        <div className="supplier-name-cell">
+                          <span className="supplier-company-icon">
+                            <Building2 size={17} />
+                          </span>
+
+                          <span>
+                            <strong>{item.nama}</strong>
+
+                            <small>
+                              ID pemasok #
+                              {String(item.id).padStart(
+                                3,
+                                "0"
+                              )}
+                            </small>
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="supplier-empty">
+                          Belum diisi
+                        </span>
+                      )}
+                    </td>
+
+                    {/* KONTAK */}
+                    <td>
+                      {item.telepon || item.email ? (
+                        <div className="supplier-contact-cell">
+                          {item.telepon && (
+                            <span>
+                              <Phone size={13} />
+                              {item.telepon}
+                            </span>
+                          )}
+
+                          {item.email && (
+                            <span>
+                              <Mail size={13} />
+                              {item.email}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="supplier-empty">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    {/* ALAMAT */}
+                    <td>
+                      {item.alamat ? (
+                        <span className="supplier-address">
+                          <MapPin size={14} />
+                          {item.alamat}
+                        </span>
+                      ) : (
+                        <span className="supplier-empty">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    {/* KATEGORI */}
+                    <td>
+                      {item.kategori ? (
+                        <span className="supplier-category">
+                          <Package size={13} />
+                          {item.kategori}
+                        </span>
+                      ) : (
+                        <span className="supplier-empty">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    {/* STATUS */}
+                    <td>
+                      <span
+                        className={`supplier-status ${
+                          item.status === "Aktif"
+                            ? "is-active"
+                            : "is-inactive"
+                        }`}
+                      >
+                        <span />
+                        {item.status}
+                      </span>
+                    </td>
+
+                    {/* AKSI */}
+                    <td>
+                      <div className="supplier-row-actions">
+                        <button
+                          type="button"
+                          className="supplier-icon-button edit"
+                          onClick={() =>
+                            handleEdit(item.id)
+                          }
+                          aria-label={`Edit pemasok ${item.id}`}
+                          title="Edit pemasok"
+                        >
+                          <Pencil size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="supplier-icon-button delete"
+                          onClick={() =>
+                            handleDelete(item.id)
+                          }
+                          aria-label={`Hapus pemasok ${item.id}`}
+                          title="Hapus pemasok"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {/* DATA KOSONG */}
+                {pageData.length === 0 && (
+                  <tr>
+                    <td
+                      className="supplier-no-results"
+                      colSpan={7}
+                    >
+                      <Search size={24} />
+
+                      <strong>
+                        Data tidak ditemukan
+                      </strong>
+
+                      <span>
+                        Coba kata kunci atau filter status
+                        yang lain.
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          changeSearch("");
+                          setStatusFilter("Semua");
+                          setHalaman(1);
+                        }}
+                      >
+                        Reset pencarian
+                      </button>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* PAGINATION */}
+          <footer className="supplier-table-footer">
+            <p>
+              Menampilkan{" "}
+              <strong>
+                {pageData.length > 0
+                  ? (currentPage - 1) * PAGE_SIZE + 1
+                  : 0}
+                –
+                {(currentPage - 1) * PAGE_SIZE +
+                  pageData.length}
+              </strong>{" "}
+              dari{" "}
+              <strong>{filteredData.length}</strong>{" "}
+              data
+            </p>
+
+            <nav
+              className="supplier-pagination"
+              aria-label="Navigasi halaman"
+            >
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() =>
+                  setHalaman((page) =>
+                    Math.max(1, page - 1)
+                  )
+                }
+                aria-label="Halaman sebelumnya"
+              >
+                <ChevronLeft size={17} />
+              </button>
+
+              {Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+              ).map((page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className={
+                    page === currentPage
+                      ? "current"
+                      : ""
+                  }
+                  onClick={() => setHalaman(page)}
+                  aria-current={
+                    page === currentPage
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() =>
+                  setHalaman((page) =>
+                    Math.min(totalPages, page + 1)
+                  )
+                }
+                aria-label="Halaman berikutnya"
+              >
+                <ChevronRight size={17} />
+              </button>
+            </nav>
+          </footer>
+        </section>
+
+        {/* FOOTER */}
+        <p className="supplier-footnote">
+          Stock.co <span>•</span> Sistem manajemen inventaris
+        </p>
       </main>
-
     </div>
   );
 }

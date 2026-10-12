@@ -1,7 +1,20 @@
+
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import {
+  Package,
+  PackageCheck,
+  ClipboardCheck,
+  Search,
+  CalendarDays,
+  Boxes,
+  Hash,
+  RotateCcw,
+  Save,
+  CircleCheck,
+  ClipboardList,
+} from "lucide-react";
 
 import Sidebar from "../components/Sidebar";
 import ProfilManager from "../components/ProfilManager";
@@ -14,20 +27,7 @@ export default function StokKeluarPage() {
   const [sku, setSku] = useState("");
   const [catatan, setCatatan] = useState("");
 
-  const handleSimpan = () => {
-    if (
-      !barang ||
-      !tujuan ||
-      !tanggal ||
-      !jumlah ||
-      !sku
-    ) {
-      alert("Silakan lengkapi data terlebih dahulu.");
-      return;
-    }
-
-    alert("Data stok keluar berhasil disimpan.");
-
+  const resetForm = () => {
     setBarang("");
     setTujuan("");
     setTanggal("");
@@ -36,252 +36,337 @@ export default function StokKeluarPage() {
     setCatatan("");
   };
 
+  const handleSimpan = () => {
+    if (
+      !barang.trim() ||
+      !tujuan.trim() ||
+      !tanggal ||
+      !jumlah.trim() ||
+      !sku.trim()
+    ) {
+      alert("Mohon lengkapi semua informasi wajib terlebih dahulu.");
+      return;
+    }
+
+    if (!Number.isInteger(Number(jumlah)) || Number(jumlah) <= 0) {
+      alert("Jumlah keluar harus berupa bilangan bulat lebih dari 0.");
+      return;
+    }
+
+    alert("Data stok keluar berhasil dicatat.");
+    resetForm();
+  };
+
+  const inputClass =
+    "w-full min-w-0 rounded-lg border border-[#d8e3d7] bg-white py-3 pl-11 pr-3 text-sm text-[#35483a] outline-none transition placeholder:text-[#9aa69c] focus:border-[#58765b] focus:ring-2 focus:ring-[#58765b]/10";
+
+  const iconClass =
+    "pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#89968b]";
+
   return (
-    <div className="flex min-h-screen bg-[#f7f7f7]">
-
-      {/* =========================
-          SIDEBAR
-      ========================= */}
-
+    <div className="flex min-h-screen bg-[#f4f7f4]">
       <Sidebar />
 
-      {/* =========================
-          KONTEN UTAMA
-      ========================= */}
-
-      <main className="flex-1 px-7 py-5">
-
-        {/* =========================
-            HEADER
-        ========================= */}
-
-        <div className="mb-5 flex items-start justify-between">
-
+      <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        {/* Header halaman */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-[28px] font-bold leading-tight text-[#111111]">
+            <div className="mb-2 flex items-center gap-2 text-xs text-[#718074]">
+              <span>Dashboard</span>
+              <span>/</span>
+              <span className="text-[#58765b]">Stok Keluar</span>
+            </div>
+
+            <h1 className="text-2xl font-semibold tracking-tight text-[#263b2b] sm:text-3xl">
               Stok Keluar
             </h1>
 
-            <p className="mt-1 text-[14px] text-gray-500">
-              Catatan pengeluaran barang dari gudang
+            <p className="mt-2 text-sm leading-6 text-[#718074]">
+              Catat pengeluaran barang dan perbarui informasi inventori.
             </p>
           </div>
 
-          <ProfilManager />
-
+          <div className="flex items-center sm:justify-end">
+            <ProfilManager />
+          </div>
         </div>
 
-
-        {/* =========================
-            FORM CARD
-        ========================= */}
-
-        <section className="min-h-[560px] rounded-[7px] border border-[#22c77a] bg-white px-7 pb-10 pt-6">
-
-          {/* JUDUL FORM */}
-
-          <h2 className="mb-6 text-[19px] font-bold text-[#111111]">
-            Form Pengeluaran Barang
-          </h2>
-
-
-          {/* =========================
-              PILIH BARANG
-          ========================= */}
-
-          <div className="mb-6">
-
-            <label
-              htmlFor="barang"
-              className="mb-2 block text-[13px] text-[#333333]"
-            >
-              Pilih Barang
-            </label>
-
-            <div className="relative">
-
-              <Search
-                size={17}
-                strokeWidth={1.7}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              />
-
-              <input
-                id="barang"
-                type="text"
-                value={barang}
-                onChange={(e) =>
-                  setBarang(e.target.value)
-                }
-                placeholder="Cari atau pilih barang"
-                className="h-11 w-full rounded-[5px] border border-[#22c77a] bg-white pl-10 pr-3 text-[13px] text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#22c77a]"
-              />
-
+        {/* Card ringkasan */}
+        <div className="sm-summary-grid">
+          <div className="sm-summary-card">
+            <div className="sm-summary-icon">
+              <PackageCheck />
             </div>
 
+            <div className="sm-summary-text">
+              <p className="sm-summary-label">
+                Pencatatan Pengeluaran
+              </p>
+              <p className="sm-summary-value">Form Stok Keluar</p>
+            </div>
           </div>
 
-
-          {/* =========================
-              BARIS TUJUAN + TANGGAL
-          ========================= */}
-
-          <div className="grid grid-cols-2 gap-8">
-
-            {/* TUJUAN PENGELUARAN */}
-
-            <div>
-
-              <label
-                htmlFor="tujuan"
-                className="mb-2 block text-[13px] text-[#333333]"
-              >
-                Tujuan Pengeluaran
-              </label>
-
-              <input
-                id="tujuan"
-                type="text"
-                value={tujuan}
-                onChange={(e) =>
-                  setTujuan(e.target.value)
-                }
-                placeholder="Misal: penjualan, penggunaan internal"
-                className="h-11 w-full rounded-[5px] border border-[#22c77a] bg-white px-3 text-[13px] text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#22c77a]"
-              />
-
+          <div className="sm-summary-card">
+            <div className="sm-summary-icon">
+              <ClipboardCheck />
             </div>
 
+            <div className="sm-summary-text">
+              <p className="sm-summary-label">Data Wajib</p>
+              <p className="sm-summary-value">
+                5 informasi harus diisi
+              </p>
+            </div>
+          </div>
+        </div>
 
-            {/* TANGGAL */}
+        {/* Form dan informasi tambahan */}
+        <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(280px,0.9fr)]">
+          {/* Form pengeluaran */}
+          <section className="min-w-0 overflow-hidden rounded-xl border border-[#dfe8de] bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-[#e6ece5] px-5 py-5 sm:px-7">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf4ec] text-[#58765b]">
+                <Package size={21} strokeWidth={1.6} />
+              </div>
 
-            <div>
-
-              <label
-                htmlFor="tanggal"
-                className="mb-2 block text-[13px] text-[#333333]"
-              >
-                Tanggal Barang Keluar
-              </label>
-
-              <input
-                id="tanggal"
-                type="date"
-                value={tanggal}
-                onChange={(e) =>
-                  setTanggal(e.target.value)
-                }
-                className="h-11 w-full rounded-[5px] border border-[#22c77a] bg-white px-3 text-[13px] text-gray-500 outline-none focus:border-[#22c77a]"
-              />
-
+              <div>
+                <h2 className="text-base font-semibold text-[#263b2b]">
+                  Form Pengeluaran Barang
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-[#718074]">
+                  Lengkapi informasi barang yang dikeluarkan dari gudang.
+                </p>
+              </div>
             </div>
 
-          </div>
+            <div className="space-y-5 p-5 sm:p-7">
+              {/* Pilih barang */}
+              <div>
+                <label
+                  htmlFor="barang"
+                  className="mb-2 block text-sm font-medium text-[#35483a]"
+                >
+                  Pilih Barang <span className="text-red-500">*</span>
+                </label>
 
+                <div className="relative">
+                  <Search size={18} className={iconClass} />
 
-          {/* =========================
-              BARIS JUMLAH + CATATAN
-          ========================= */}
+                  <input
+                    id="barang"
+                    type="text"
+                    value={barang}
+                    onChange={(e) => setBarang(e.target.value)}
+                    placeholder="Cari atau pilih barang"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-8">
+              {/* Tujuan dan tanggal */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="tujuan"
+                    className="mb-2 block text-sm font-medium text-[#35483a]"
+                  >
+                    Tujuan Pengeluaran{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
 
-            {/* JUMLAH KELUAR */}
+                  <input
+                    id="tujuan"
+                    type="text"
+                    value={tujuan}
+                    onChange={(e) => setTujuan(e.target.value)}
+                    placeholder="Misal: penjualan, penggunaan internal"
+                    className="w-full min-w-0 rounded-lg border border-[#d8e3d7] bg-white px-4 py-3 text-sm text-[#35483a] outline-none transition placeholder:text-[#9aa69c] focus:border-[#58765b] focus:ring-2 focus:ring-[#58765b]/10"
+                  />
+                </div>
 
-            <div>
+                <div className="min-w-0">
+                  <label
+                    htmlFor="tanggal"
+                    className="mb-2 block text-sm font-medium text-[#35483a]"
+                  >
+                    Tanggal Barang Keluar{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
 
-              <label
-                htmlFor="jumlah"
-                className="mb-2 block text-[13px] text-[#333333]"
-              >
-                Jumlah Keluar
-              </label>
+                  <div className="relative">
+                    <CalendarDays size={18} className={iconClass} />
 
-              <input
-                id="jumlah"
-                type="number"
-                min="1"
-                value={jumlah}
-                onChange={(e) =>
-                  setJumlah(e.target.value)
-                }
-                className="h-11 w-full rounded-[5px] border border-[#22c77a] bg-white px-3 text-[13px] text-gray-700 outline-none focus:border-[#22c77a]"
-              />
+                    <input
+                      id="tanggal"
+                      type="date"
+                      value={tanggal}
+                      onChange={(e) => setTanggal(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              </div>
 
+              {/* Jumlah dan SKU sejajar */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {/* Kolom kiri: Jumlah */}
+                <div className="min-w-0">
+                  <label
+                    htmlFor="jumlah"
+                    className="mb-2 block text-sm font-medium text-[#35483a]"
+                  >
+                    Jumlah Keluar{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <Boxes size={18} className={iconClass} />
+
+                    <input
+                      id="jumlah"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={jumlah}
+                      onChange={(e) => setJumlah(e.target.value)}
+                      placeholder="Contoh: 5"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                {/* Kolom kanan: SKU */}
+                <div className="min-w-0">
+                  <label
+                    htmlFor="sku"
+                    className="mb-2 block text-sm font-medium text-[#35483a]"
+                  >
+                    SKU <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <Hash size={18} className={iconClass} />
+
+                    <input
+                      id="sku"
+                      type="text"
+                      value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                      placeholder="Contoh: ELC - 001"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Catatan di bawah, selebar form */}
+              <div>
+                <label
+                  htmlFor="catatan"
+                  className="mb-2 block text-sm font-medium text-[#35483a]"
+                >
+                  Catatan{" "}
+                  <span className="font-normal text-[#89968b]">
+                    (Opsional)
+                  </span>
+                </label>
+
+                <textarea
+                  id="catatan"
+                  rows={3}
+                  value={catatan}
+                  onChange={(e) => setCatatan(e.target.value)}
+                  placeholder="Tambahkan catatan jika diperlukan..."
+                  className="w-full resize-y rounded-lg border border-[#d8e3d7] bg-white px-4 py-3 text-sm leading-6 text-[#35483a] outline-none transition placeholder:text-[#9aa69c] focus:border-[#58765b] focus:ring-2 focus:ring-[#58765b]/10"
+                />
+              </div>
+
+              {/* Tombol */}
+              <div className="flex flex-col-reverse gap-3 border-t border-[#e6ece5] pt-5 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8e3d7] bg-white px-5 py-3 text-sm font-medium text-[#526356] transition hover:bg-[#f4f7f2]"
+                >
+                  <RotateCcw size={16} />
+                  Batal
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSimpan}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#58765b] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#48664b] focus:outline-none focus:ring-2 focus:ring-[#58765b]/30 focus:ring-offset-2"
+                >
+                  <Save size={17} />
+                  Simpan Pengeluaran
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Informasi tambahan */}
+          <aside className="sm-info-card">
+            <div className="sm-info-header">
+              <h2 className="sm-info-title">Informasi Tambahan</h2>
+              <p className="sm-info-description">
+                Panduan singkat pencatatan barang keluar.
+              </p>
             </div>
 
+            <div className="sm-info-content">
+              {/* Ikon outline sederhana */}
+              <div className="sm-info-visual">
+                <Boxes size={32} strokeWidth={1.5} />
+              </div>
 
-            {/* CATATAN */}
+              <section className="sm-info-section">
+                <h3>Pastikan Data Sudah Benar</h3>
+                <p>
+                  Periksa informasi barang sebelum menyimpan pencatatan
+                  stok keluar agar data inventori tetap teratur.
+                </p>
+              </section>
 
-            <div>
+              <section className="sm-info-section">
+                <h3>Checklist Pengeluaran</h3>
 
-              <label
-                htmlFor="catatan"
-                className="mb-2 block text-[13px] text-[#333333]"
-              >
-                Catatan (Opsional)
-              </label>
+                <ul className="sm-checklist">
+                  <li>
+                    <CircleCheck />
+                    <span>Barang yang dipilih sudah sesuai</span>
+                  </li>
+                  <li>
+                    <CircleCheck />
+                    <span>Tujuan pengeluaran sudah dicatat</span>
+                  </li>
+                  <li>
+                    <CircleCheck />
+                    <span>Jumlah barang sudah benar</span>
+                  </li>
+                  <li>
+                    <CircleCheck />
+                    <span>SKU sesuai dengan barang</span>
+                  </li>
+                </ul>
+              </section>
 
-              <textarea
-                id="catatan"
-                value={catatan}
-                onChange={(e) =>
-                  setCatatan(e.target.value)
-                }
-                placeholder="Tambahkan Catatan..."
-                className="h-[120px] w-full resize-none rounded-[5px] border border-[#22c77a] bg-white px-3 py-3 text-[13px] text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#22c77a]"
-              />
+              <div className="sm-info-tip">
+                <ClipboardList size={19} strokeWidth={1.6} />
 
+                <div>
+                  <h3 className="text-sm font-semibold text-[#35483a]">
+                    Tips Pencatatan
+                  </h3>
+                  <p>
+                    Catat tujuan pengeluaran dengan jelas agar pergerakan
+                    stok mudah ditelusuri.
+                  </p>
+                </div>
+              </div>
             </div>
-
-          </div>
-
-
-          {/* =========================
-              SKU
-          ========================= */}
-
-          <div className="mt-[-44px] w-[calc(50%-16px)]">
-
-            <label
-              htmlFor="sku"
-              className="mb-2 block text-[13px] text-[#333333]"
-            >
-              SKU
-            </label>
-
-            <input
-              id="sku"
-              type="text"
-              value={sku}
-              onChange={(e) =>
-                setSku(e.target.value)
-              }
-              className="h-11 w-full rounded-[5px] border border-[#22c77a] bg-white px-3 text-[13px] text-gray-700 outline-none focus:border-[#22c77a]"
-            />
-
-          </div>
-
-
-          {/* =========================
-              TOMBOL SIMPAN
-          ========================= */}
-
-          <div className="mt-10 flex justify-center">
-
-            <button
-              type="button"
-              onClick={handleSimpan}
-              className="h-11 w-[260px] rounded-[5px] bg-[#587653] text-[14px] font-semibold text-white transition hover:bg-[#4e6b4a]"
-            >
-              Simpan
-            </button>
-
-          </div>
-
-        </section>
-
+          </aside>
+        </div>
       </main>
-
     </div>
   );
 }
